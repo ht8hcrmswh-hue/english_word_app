@@ -14,7 +14,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      ARTIFACT_URL: 'https://sdmntprseasia.oaiusercontent.com/files/00000000-8a70-8207-94d1-eb7241b8216a/raw?se=2026-08-02T03:44:19Z&sp=r&sv=2026-02-06&sr=b&scid=f72ec66d-a744-5d3c-9198-746a1c9b22e0&skoid=6980ab1e-b994-4668-84de-ad0444c9d08b&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-01T23:27:10Z&ske=2026-08-02T23:27:10Z&sks=b&skv=2026-02-06&sig=/YaNB8y3JmRiralYBFDfv%2B5KZuanb9ReKU%2BPLm87js4%3D'
+      ARTIFACT_URL: 'https://sdmntprindiasocentral.oaiusercontent.com/files/00000000-f784-8211-8a54-e92ac9d80c94/raw?se=2026-08-02T03:47:42Z&sp=r&sv=2026-02-06&sr=b&scid=cc69212b-a266-5bf9-865d-b76988b73ce7&skoid=6980ab1e-b994-4668-84de-ad0444c9d08b&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-08-01T22:38:22Z&ske=2026-08-02T22:38:22Z&sks=b&skv=2026-02-06&sig=KiOkRm/cxhtKaJsknSP6/1cpN%2BTneM0az3xgzYhH3xs%3D'
     steps:
       - name: Check out Pages repository
         uses: actions/checkout@v6
