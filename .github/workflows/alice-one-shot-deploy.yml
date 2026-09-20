@@ -13,16 +13,17 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Check out public Pages repository
         uses: actions/checkout@v6
 
       - name: Download verified Alice web build
         env:
-          ARTIFACT_URL: "https://sdmntprwestcentralus.oaiusercontent.com/files/00000000-818c-81fb-bdce-2c8c96ff6e3c/raw?se=2026-09-20T14%3A21%3A59Z&sp=r&sv=2026-02-06&sr=b&scid=b5cc7ee1-c94e-5cc5-a87f-1bf835d2135f&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-19T19%3A15%3A41Z&ske=2026-09-20T19%3A15%3A41Z&sks=b&skv=2026-02-06&sig=VvqkCT7cJVrOZJ2xjTUAaLsRo8H27wVz/ZDVo%2BXUcLg%3D"
+          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-5948-8209-986f-3a789ab04804/raw?se=2026-09-20T18%3A04%3A21Z&sp=r&sv=2026-02-06&sr=b&scid=eeb18a7f-e01e-5217-bb66-ad847df9ac24&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-19T23%3A34%3A07Z&ske=2026-09-20T23%3A34%3A07Z&sks=b&skv=2026-02-06&sig=7S3I9t606H4BGgjjo3nTaG3YZvsFJ/7aPaeDHBh/A7w%3D"
         run: |
-          curl --fail --location "$ARTIFACT_URL" --output /tmp/alice-web-build.zip
-          rm -rf /tmp/alice-web-build
+          curl --fail --location --max-time 90 "$ARTIFACT_URL" --output /tmp/alice-web-build.zip
+          echo '1ae8a67747b7900a0a832be24b0e24cdae3957571c4a572015cb7fbaf0a4e27b  /tmp/alice-web-build.zip' | sha256sum --check
           mkdir -p /tmp/alice-web-build
           unzip -q /tmp/alice-web-build.zip -d /tmp/alice-web-build
 
@@ -31,21 +32,54 @@ jobs:
           cp -a /tmp/alice-web-build/. .
           python3 - <<'PY'
           from pathlib import Path
-          version = "223394cb"
+          import hashlib
+          version = "f6c32bd0"
+          assert hashlib.sha256(Path('main.dart.js').read_bytes()).hexdigest() == '3f40bc72fb92a60a906998fa7b473bb768741b0691eb2bb3057d7d0ff3127fa5'
           index = Path("index.html")
           text = index.read_text(encoding="utf-8")
-          text = text.replace('src="flutter_bootstrap.js"', f'src="flutter_bootstrap.js?v={version}"')
-          index.write_text(text, encoding="utf-8")
+          old = 'src="flutter_bootstrap.js"'
+          assert text.count(old) == 1, 'Unexpected bootstrap reference'
+          index.write_text(text.replace(old, f'src="flutter_bootstrap.js?v={version}"'), encoding="utf-8")
           bootstrap = Path("flutter_bootstrap.js")
           text = bootstrap.read_text(encoding="utf-8")
-          text = text.replace('"mainJsPath":"main.dart.js"', f'"mainJsPath":"main.dart.js?v={version}"')
-          bootstrap.write_text(text, encoding="utf-8")
+          old = '"mainJsPath":"main.dart.js"'
+          assert text.count(old) == 1, 'Unexpected main script reference'
+          bootstrap.write_text(text.replace(old, f'"mainJsPath":"main.dart.js?v={version}"'), encoding="utf-8")
           PY
 
       - name: Publish build
         run: |
           git config user.name "alice-deploy-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "Deploy reconciled Alice build 223394cb" || exit 0
+          git add index.html flutter_bootstrap.js main.dart.js
+          git commit -m "Deploy note-gap fix from source f6c32bd0038b7b41603ac235f1d63c0623f06ab3"
           git push origin main
+
+      - name: Verify files served by GitHub Pages
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import time
+          import urllib.request
+          base = 'https://ht8hcrmswh-hue.github.io/english_word_app/'
+          names = ('index.html', 'flutter_bootstrap.js', 'main.dart.js')
+          expected = {n: hashlib.sha256(Path(n).read_bytes()).hexdigest() for n in names}
+          for attempt in range(36):
+              try:
+                  for name in names:
+                      req = urllib.request.Request(base + name + '?v=f6c32bd0', headers={'Cache-Control': 'no-cache'})
+                      with urllib.request.urlopen(req, timeout=20) as response:
+                          actual = hashlib.sha256(response.read()).hexdigest()
+                      if actual != expected[name]:
+                          raise ValueError(name + ' has not been updated yet')
+                  for name in names:
+                      print('PAGES VERIFIED', name, expected[name])
+                  print('SOURCE VERIFIED f6c32bd0038b7b41603ac235f1d63c0623f06ab3')
+                  break
+              except Exception as error:
+                  if attempt == 35:
+                      raise
+                  print('Waiting for Pages:', str(error))
+                  time.sleep(5)
+          PY
