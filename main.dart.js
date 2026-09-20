@@ -55591,7 +55591,7 @@ A.ajJ.prototype={
 $0(){return this.a.p5(this.b)},
 $S:0}
 A.ajK.prototype={
-$2(a,b){var s,r,q,p,o,n,m=null,l=Math.max(0,b.d-108-104-6-30-94),k=t.p,j=A.d([],k),i=this.a,h=i.go,g=B.c.aL(h).length!==0
+$2(a,b){var s,r,q,p,o,n,m=null,l=Math.max(0,b.d-72-104-6-30-130),k=t.p,j=A.d([],k),i=this.a,h=i.go,g=B.c.aL(h).length!==0
 if(g)j.push(B.aPI)
 s=this.b
 j.push(A.eN(m,i.S2(B.rX,"\u4fee\u6b63",new A.ajG(i,s)),m,m,m,0,0,m))
@@ -55615,7 +55615,7 @@ g=i.Q
 g=g.length!==0?new A.aS(B.aAL,A.cZ(A.Y(g,B.b3s,m,m,m,m,B.fL,m,m),m,m),m):B.aB
 p=A.aQ6(m,m,B.qN,m,m,m,m,m,m,B.m,m,m,m,m,m,B.Kl,m,m,B.oA,m)
 q=q?i.p4:m
-return A.bJ(A.d([B.aSM,new A.aU(m,104,j,m),r,B.ce,s,new A.aU(m,94,A.dm(B.b4,A.d([h,new A.cR(B.iv,m,m,new A.aU(m,38,g,B.b2q),m),new A.cR(B.lc,m,m,new A.aU(1/0,48,A.oI(A.Y(!i.y&&i.d===i.ax.length-1?"\u7d50\u679c\u3092\u898b\u308b":"\u6b21\u306e\u554f\u984c\u3078",m,m,m,m,m,B.EX,m,m),B.b2o,q,p),m),m)],k),B.a_,B.aS,m),B.b31)],k),B.Y,m,B.o,B.V)},
+return A.bJ(A.d([B.aSM,new A.aU(m,104,j,m),r,B.ce,s,new A.aU(m,130,A.dm(B.b4,A.d([h,new A.cR(B.iv,m,m,new A.aU(m,38,g,B.b2q),m),new A.cR(B.lc,m,m,new A.aU(1/0,48,A.oI(A.Y(!i.y&&i.d===i.ax.length-1?"\u7d50\u679c\u3092\u898b\u308b":"\u6b21\u306e\u554f\u984c\u3078",m,m,m,m,m,B.EX,m,m),B.b2o,q,p),m),m)],k),B.a_,B.aS,m),B.b31)],k),B.Y,m,B.o,B.V)},
 $S:146}
 A.ajG.prototype={
 $0(){var s=this.a
@@ -123774,7 +123774,7 @@ B.b2v=new A.I("quiz-help-button",t.O)
 B.JI=new A.vl(B.b2v,null,null)
 B.JM=new A.cR(B.pk,null,null,B.JI,null)
 B.b4V=new A.I("quiz-character-area",t.O)
-B.aSM=new A.aU(1/0,108,B.JM,B.b4V)
+B.aSM=new A.aU(1/0,72,B.JM,B.b4V)
 B.fH=new A.aU(null,10,null,null)
 B.aSN=new A.aU(null,112,null,null)
 B.eA=new A.aU(null,14,null,null)
