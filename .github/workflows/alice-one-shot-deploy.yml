@@ -18,23 +18,27 @@ jobs:
       - name: Check out public Pages repository
         uses: actions/checkout@v6
 
+      # CI run 35529133330 tested c6f95bd1ee55af998e974ff1c30df9cddcdc65e0.
+      # Merged source 2604187ec22c95c3bafcc3c5c5f6ff1dae5c4155 has the same
+      # tree 61afc98697d8038b29e3f4410849486b5a4d6963; reuse that tested build.
       - name: Download verified Alice web build
         env:
-          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-5948-8209-986f-3a789ab04804/raw?se=2026-09-20T18%3A04%3A21Z&sp=r&sv=2026-02-06&sr=b&scid=eeb18a7f-e01e-5217-bb66-ad847df9ac24&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-19T23%3A34%3A07Z&ske=2026-09-20T23%3A34%3A07Z&sks=b&skv=2026-02-06&sig=7S3I9t606H4BGgjjo3nTaG3YZvsFJ/7aPaeDHBh/A7w%3D"
+          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-7260-8209-a4db-ac3414326ad0/raw?se=2026-09-20T18%3A42%3A13Z&sp=r&sv=2026-02-06&sr=b&scid=ecf56fc7-e269-5c4e-978e-faed91556a99&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-19T22%3A52%3A53Z&ske=2026-09-20T22%3A52%3A53Z&sks=b&skv=2026-02-06&sig=yGKFDPPX4rFf9U/E8sUibJTaondAXCSpKRL7ilaguPk%3D"
         run: |
           curl --fail --location --max-time 90 "$ARTIFACT_URL" --output /tmp/alice-web-build.zip
-          echo '1ae8a67747b7900a0a832be24b0e24cdae3957571c4a572015cb7fbaf0a4e27b  /tmp/alice-web-build.zip' | sha256sum --check
+          echo '9f5789c4644b1f04c1154f0e75413a99ce1ea61ca00a6cf73bf0202b3b632cd9  /tmp/alice-web-build.zip' | sha256sum --check
           mkdir -p /tmp/alice-web-build
           unzip -q /tmp/alice-web-build.zip -d /tmp/alice-web-build
 
       - name: Copy build and add cache busting
         run: |
+          echo '3f40bc72fb92a60a906998fa7b473bb768741b0691eb2bb3057d7d0ff3127fa5  main.dart.js' | sha256sum --check
           cp -a /tmp/alice-web-build/. .
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
-          version = "f6c32bd0"
-          assert hashlib.sha256(Path('main.dart.js').read_bytes()).hexdigest() == '3f40bc72fb92a60a906998fa7b473bb768741b0691eb2bb3057d7d0ff3127fa5'
+          version = "2604187e"
+          assert hashlib.sha256(Path('main.dart.js').read_bytes()).hexdigest() == '55d3eaeb12aaafa4df09c8cc221d89f935f849e38541fd12f608352b8d99fdaf'
           index = Path("index.html")
           text = index.read_text(encoding="utf-8")
           old = 'src="flutter_bootstrap.js"'
@@ -52,7 +56,7 @@ jobs:
           git config user.name "alice-deploy-bot"
           git config user.email "actions@users.noreply.github.com"
           git add index.html flutter_bootstrap.js main.dart.js
-          git commit -m "Deploy note-gap fix from source f6c32bd0038b7b41603ac235f1d63c0623f06ab3"
+          git commit -m "Deploy startup sound setting from source 2604187ec22c95c3bafcc3c5c5f6ff1dae5c4155"
           git push origin main
 
       - name: Verify files served by GitHub Pages
@@ -68,14 +72,15 @@ jobs:
           for attempt in range(36):
               try:
                   for name in names:
-                      req = urllib.request.Request(base + name + '?v=f6c32bd0', headers={'Cache-Control': 'no-cache'})
+                      req = urllib.request.Request(base + name + '?v=2604187e', headers={'Cache-Control': 'no-cache'})
                       with urllib.request.urlopen(req, timeout=20) as response:
                           actual = hashlib.sha256(response.read()).hexdigest()
                       if actual != expected[name]:
                           raise ValueError(name + ' has not been updated yet')
                   for name in names:
                       print('PAGES VERIFIED', name, expected[name])
-                  print('SOURCE VERIFIED f6c32bd0038b7b41603ac235f1d63c0623f06ab3')
+                  print('SOURCE TREE VERIFIED 61afc98697d8038b29e3f4410849486b5a4d6963')
+                  print('MERGED SOURCE 2604187ec22c95c3bafcc3c5c5f6ff1dae5c4155')
                   break
               except Exception as error:
                   if attempt == 35:
