@@ -1,0 +1,51 @@
+name: Alice one-shot deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/alice-one-shot-deploy.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out public Pages repository
+        uses: actions/checkout@v6
+
+      - name: Download verified Alice web build
+        env:
+          ARTIFACT_URL: "https://sdmntprwestcentralus.oaiusercontent.com/files/00000000-818c-81fb-bdce-2c8c96ff6e3c/raw?se=2026-09-20T14%3A21%3A59Z&sp=r&sv=2026-02-06&sr=b&scid=b5cc7ee1-c94e-5cc5-a87f-1bf835d2135f&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-19T19%3A15%3A41Z&ske=2026-09-20T19%3A15%3A41Z&sks=b&skv=2026-02-06&sig=VvqkCT7cJVrOZJ2xjTUAaLsRo8H27wVz/ZDVo%2BXUcLg%3D"
+        run: |
+          curl --fail --location "$ARTIFACT_URL" --output /tmp/alice-web-build.zip
+          rm -rf /tmp/alice-web-build
+          mkdir -p /tmp/alice-web-build
+          unzip -q /tmp/alice-web-build.zip -d /tmp/alice-web-build
+
+      - name: Copy build and add cache busting
+        run: |
+          cp -a /tmp/alice-web-build/. .
+          python3 - <<'PY'
+          from pathlib import Path
+          version = "223394cb"
+          index = Path("index.html")
+          text = index.read_text(encoding="utf-8")
+          text = text.replace('src="flutter_bootstrap.js"', f'src="flutter_bootstrap.js?v={version}"')
+          index.write_text(text, encoding="utf-8")
+          bootstrap = Path("flutter_bootstrap.js")
+          text = bootstrap.read_text(encoding="utf-8")
+          text = text.replace('"mainJsPath":"main.dart.js"', f'"mainJsPath":"main.dart.js?v={version}"')
+          bootstrap.write_text(text, encoding="utf-8")
+          PY
+
+      - name: Publish build
+        run: |
+          git config user.name "alice-deploy-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Deploy reconciled Alice build 223394cb" || exit 0
+          git push origin main
