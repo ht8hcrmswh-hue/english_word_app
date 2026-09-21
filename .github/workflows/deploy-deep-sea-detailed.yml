@@ -1,0 +1,36 @@
+name: Deploy detailed Deep Sea title
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/deploy-deep-sea-detailed.yml']
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download verified build
+        env:
+          ARTIFACT_URL: "https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-fa30-8206-a65b-42db571b58fd/raw?se=2026-09-21T10%3A12%3A22Z&sp=r&sv=2026-02-06&sr=b&scid=a6c3b9a0-d8b0-5595-a634-24bc1b95533b&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-21T01%3A07%3A54Z&ske=2026-09-22T01%3A07%3A54Z&sks=b&skv=2026-02-06&sig=bqU3P8U9dQz356N2%2B2oAp%2BwHYsQ4j3n0MI/TUqPA3JI%3D"
+        run: |
+          curl --fail --location "$ARTIFACT_URL" -o /tmp/alice.zip
+          rm -rf /tmp/alice-build && mkdir -p /tmp/alice-build
+          unzip -q /tmp/alice.zip -d /tmp/alice-build
+      - name: Replace Pages build and cache bust
+        run: |
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
+          cp -a /tmp/alice-build/. .
+          python3 - <<'PY'
+          from pathlib import Path
+          version="06268835"
+          p=Path("index.html"); s=p.read_text(); s=s.replace('src="flutter_bootstrap.js"',f'src="flutter_bootstrap.js?v={version}"'); p.write_text(s)
+          p=Path("flutter_bootstrap.js"); s=p.read_text(); s=s.replace('"mainJsPath":"main.dart.js"',f'"mainJsPath":"main.dart.js?v={version}"'); p.write_text(s)
+          PY
+      - name: Publish
+        run: |
+          git config user.name "alice-deploy-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Deploy detailed Deep Sea title 06268835" || exit 0
+          git push origin main
