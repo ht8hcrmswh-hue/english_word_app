@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1280">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#079bd4"/><stop offset=".3" stop-color="#07558b"/><stop offset=".68" stop-color="#06315b"/><stop offset="1" stop-color="#01162e"/></linearGradient>
+ <linearGradient id="ray" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#baf7ff" stop-opacity=".48"/><stop offset="1" stop-color="#43bde7" stop-opacity="0"/></linearGradient>
+ <radialGradient id="bubble"><stop stop-color="#e7fbff" stop-opacity=".25"/><stop offset=".75" stop-color="#5bdcff" stop-opacity=".08"/><stop offset="1" stop-color="#d5faff" stop-opacity=".65"/></radialGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<rect width="720" height="1280" fill="url(#bg)"/>
+<ellipse cx="360" cy="-15" rx="330" ry="130" fill="#82e7ff" opacity=".18"/>
+<path d="M250 0 L80 760 L300 760 L330 0Z" fill="url(#ray)" opacity=".48"/>
+<path d="M345 0 L270 700 L430 700 L385 0Z" fill="url(#ray)" opacity=".32"/>
+<path d="M455 0 L390 720 L650 720 L500 0Z" fill="url(#ray)" opacity=".24"/>
+<!-- whale -->
+<g fill="#042d54" opacity=".9">
+ <path d="M80 300 C155 245 300 250 430 315 C490 345 525 365 595 354 C550 388 500 397 450 386 C345 430 190 405 105 345 C75 330 62 316 80 300Z"/>
+ <path d="M575 355 C630 325 662 326 690 342 C657 350 640 368 615 392 C607 374 594 364 575 355Z"/>
+ <path d="M245 380 C278 418 308 433 348 438 C305 451 260 438 223 403Z"/>
+</g>
+<!-- distant fish -->
+<g fill="#77d8f3" opacity=".42">
+ <path d="M535 230l25-9 17 9-17 9z"/><path d="M575 270l18-7 13 7-13 7z"/><path d="M510 420l20-8 15 8-15 8z"/>
+ <path d="M205 625l22-8 15 8-15 8z"/><path d="M245 645l18-7 13 7-13 7z"/>
+</g>
+<!-- jellyfish -->
+<g stroke="#9feeff" stroke-width="3" fill="none" opacity=".82">
+ <path d="M610 410 C610 365 675 365 675 410 C650 425 632 425 610 410Z" fill="#77d9f0" opacity=".28"/>
+ <path d="M620 414c-12 35 20 50 0 90M638 416c-8 38 18 58 3 98M657 414c10 35-18 57 2 93"/>
+ <path d="M105 520 C105 486 155 486 155 520 C138 532 121 532 105 520Z" fill="#77d9f0" opacity=".24"/>
+ <path d="M114 524c-8 30 12 42-2 70M132 524c-4 27 12 43 1 66M147 523c8 26-10 44 3 65"/>
+</g>
+<!-- ruins -->
+<g fill="#032440" stroke="#0b5a7c" stroke-width="3" opacity=".92">
+ <path d="M545 705h35v210h-35zM650 665h34v250h-34z"/>
+ <path d="M525 705h75v22h-75zM630 665h72v22h-72z"/>
+ <path d="M535 680h55l-12-25h-30zM640 640h54l-12-25h-30z"/>
+ <path d="M555 770 C575 735 610 735 630 770 V915 H610 V780 C598 755 585 755 573 780 V915 H555Z"/>
+</g>
+<!-- seabed rocks -->
+<path d="M0 930 C70 870 120 905 170 875 C225 842 280 910 335 885 C390 855 455 905 505 865 C565 820 630 885 720 840 V1280 H0Z" fill="#021a31"/>
+<path d="M0 1010 C75 955 145 1005 220 955 C285 912 335 990 410 950 C500 900 575 960 720 900 V1280 H0Z" fill="#011225"/>
+<!-- coral -->
+<g fill="none" stroke-linecap="round">
+ <g stroke="#21c6ff" stroke-width="12" opacity=".88"><path d="M45 1110v-145m0 40-32-35m32 65 42-45m-42 78-30 30M92 1160v-115m0 35 32-34m-32 70-28-27"/></g>
+ <g stroke="#7c72ff" stroke-width="11" opacity=".8"><path d="M660 1120v-150m0 45-35-35m35 70 35-42m-35 82-25 28M600 1180v-110m0 35-30-28"/></g>
+</g>
+<!-- bubbles -->
+<g fill="url(#bubble)">
+ <circle cx="70" cy="180" r="18"/><circle cx="105" cy="245" r="8"/><circle cx="650" cy="210" r="14"/><circle cx="680" cy="330" r="8"/>
+ <circle cx="165" cy="450" r="10"/><circle cx="560" cy="530" r="13"/><circle cx="80" cy="690" r="8"/><circle cx="665" cy="750" r="16"/>
+ <circle cx="120" cy="865" r="12"/><circle cx="600" cy="990" r="9"/><circle cx="75" cy="1170" r="15"/><circle cx="675" cy="1200" r="11"/>
+</g>
+<g fill="#8eeeff" opacity=".35" filter="url(#glow)"><circle cx="150" cy="1040" r="35"/><circle cx="590" cy="1060" r="28"/></g>
+</svg>
