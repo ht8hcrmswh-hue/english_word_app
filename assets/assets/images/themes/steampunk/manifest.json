@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "id": "steampunk",
+  "displayName": "スチームパンク",
+  "themeVersion": 1,
+  "generatedAt": "2026-09-21T16:18:18.703390Z",
+  "assets": {
+    "title": {
+      "file": "title.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 48836,
+      "sha256": "05fff182c62be55d1441139b7624e7f12433f6702159dfdf0faccea747aac9a9"
+    },
+    "levelFront": {
+      "file": "level_front.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 37462,
+      "sha256": "5db8257c3e52cb444ee5b1b18fdacc5725211cfc582da978f6f6b6c2969b1604"
+    },
+    "levelBack": {
+      "file": "level_back.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 41050,
+      "sha256": "2fa33b873082fdd0a2ef142495f20fe1dfdc6708d1de8da969c6f30dcb88d6cc"
+    },
+    "quizUnanswered": {
+      "file": "quiz_unanswered.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 43230,
+      "sha256": "6eaf42f2aa97f7ac0f11278219f4e100e4814bdc79363c63464f984fba8ec2de"
+    },
+    "quizAnswered": {
+      "file": "quiz_answered.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 40668,
+      "sha256": "338a53c271f16aa0acef224842940f7cb800e86f7e50844cf2a3a3b3843e209a"
+    },
+    "result": {
+      "file": "result.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 56252,
+      "sha256": "0a23225b6c7ec6c8ddc2d182e9f756adb48b65f7c7843dd2fc7b4125ac5168a9"
+    },
+    "worldMap": {
+      "file": "world_map.webp",
+      "width": 480,
+      "height": 853,
+      "bytes": 63348,
+      "sha256": "77fd9dedaa15a636dcbd7702b59bdfdc3ff02b06d22f8a3ff39fb20e63243620"
+    }
+  }
+}
