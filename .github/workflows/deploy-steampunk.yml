@@ -17,11 +17,11 @@ jobs:
 
       - name: Download verified Alice build
         env:
-          ARTIFACT_URL: "https://sdmntprnznorth.oaiusercontent.com/files/00000000-8590-820b-bc0a-f99ce1f2ce63/raw?se=2026-09-21T12%3A26%3A53Z&sp=r&sv=2026-02-06&sr=b&scid=5363d98a-b194-5185-94f5-fffc122020fb&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-20T22%3A52%3A52Z&ske=2026-09-21T22%3A52%3A52Z&sks=b&skv=2026-02-06&sig=EaRdAX/PZNf0WS3J248M7CqiQqpYfi0iHOW9vntCtt8%3D"
+          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-0004-8209-97a1-c3bd3c959e11/raw?se=2026-09-22T00%3A05%3A05Z&sp=r&sv=2026-02-06&sr=b&scid=2ee341fb-e428-5945-9c5e-edabd6828a41&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-21T23%3A25%3A55Z&ske=2026-09-22T23%3A25%3A55Z&sks=b&skv=2026-02-06&sig=ex6k0y5%2BWM10sn4vtegrOXxf%2BImZXPvGyfom%2BbPD53I%3D"
         run: |
           set -euo pipefail
           curl --fail --location --max-time 120 "$ARTIFACT_URL" -o /tmp/alice-web-build.zip
-          echo '3c14cb9d04367190140c626fa000b223cf1a89f6dd07c1299056701e99bd2d87  /tmp/alice-web-build.zip' | sha256sum --check
+          echo 'e222afe23e6ca70719b4b4518d27b0fa8a94cc7a3bf1d36ee1c7075012b17bd7  /tmp/alice-web-build.zip' | sha256sum --check
           rm -rf /tmp/alice-build
           mkdir -p /tmp/alice-build
           unzip -q /tmp/alice-web-build.zip -d /tmp/alice-build
@@ -29,12 +29,37 @@ jobs:
       - name: Verify source build
         run: |
           set -euo pipefail
-          echo '8b11ec36ddee15daf5e2702b0d539f45d1ae4b1abf5c993808c10f110ae508f9  /tmp/alice-build/main.dart.js' | sha256sum --check
-          for name in             steampunk_title             steampunk_level_front             steampunk_level_back             steampunk_quiz_unanswered             steampunk_quiz_answered             steampunk_result             steampunk_world_map
-          do
-            test -s "/tmp/alice-build/assets/assets/images/${name}.webp"
-            file "/tmp/alice-build/assets/assets/images/${name}.webp" | grep -qi 'Web/P image'
-          done
+          echo 'c5d5e5d92f9e06c91b9cb0952b67432b2b066fb7e74c0f3c32394481d60e128d  /tmp/alice-build/main.dart.js' | sha256sum --check
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib
+          import json
+
+          root = Path('/tmp/alice-build/assets/assets/images/themes/steampunk')
+          manifest_path = root / 'manifest.json'
+          manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+          assert manifest['id'] == 'steampunk'
+          assert manifest['displayName'] == 'スチームパンク'
+          assert manifest['themeVersion'] == 1
+
+          expected = {
+              'title': ('title.webp', 48836, '05fff182c62be55d1441139b7624e7f12433f6702159dfdf0faccea747aac9a9'),
+              'levelFront': ('level_front.webp', 37462, '5db8257c3e52cb444ee5b1b18fdacc5725211cfc582da978f6f6b6c2969b1604'),
+              'levelBack': ('level_back.webp', 41050, '2fa33b873082fdd0a2ef142495f20fe1dfdc6708d1de8da969c6f30dcb88d6cc'),
+              'quizUnanswered': ('quiz_unanswered.webp', 43230, '6eaf42f2aa97f7ac0f11278219f4e100e4814bdc79363c63464f984fba8ec2de'),
+              'quizAnswered': ('quiz_answered.webp', 40668, '338a53c271f16aa0acef224842940f7cb800e86f7e50844cf2a3a3b3843e209a'),
+              'result': ('result.webp', 56252, '0a23225b6c7ec6c8ddc2d182e9f756adb48b65f7c7843dd2fc7b4125ac5168a9'),
+              'worldMap': ('world_map.webp', 63348, '77fd9dedaa15a636dcbd7702b59bdfdc3ff02b06d22f8a3ff39fb20e63243620'),
+          }
+          for key, (name, size, digest) in expected.items():
+              record = manifest['assets'][key]
+              assert record['file'] == name, (key, record)
+              path = root / name
+              assert path.stat().st_size == size, (name, path.stat().st_size)
+              assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, name
+
+          assert hashlib.sha256(manifest_path.read_bytes()).hexdigest() == '428b1fb1f04f010e117540eadda5171362b20cfc0e857a728a323b44156be2a4'
+          PY
 
       - name: Replace Pages build and add cache busting
         run: |
@@ -44,21 +69,31 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import hashlib
-          version = 'ac0b2ed6'
+
+          version = 'fcfa99d6'
+
           index = Path('index.html')
           text = index.read_text(encoding='utf-8')
           old = 'src="flutter_bootstrap.js"'
           assert text.count(old) == 1, 'Unexpected bootstrap reference'
-          index.write_text(text.replace(old, f'src="flutter_bootstrap.js?v={version}"'), encoding='utf-8')
+          index.write_text(
+              text.replace(old, f'src="flutter_bootstrap.js?v={version}"'),
+              encoding='utf-8',
+          )
+
           bootstrap = Path('flutter_bootstrap.js')
           text = bootstrap.read_text(encoding='utf-8')
           old = '"mainJsPath":"main.dart.js"'
           assert text.count(old) == 1, 'Unexpected main script reference'
-          bootstrap.write_text(text.replace(old, f'"mainJsPath":"main.dart.js?v={version}"'), encoding='utf-8')
+          bootstrap.write_text(
+              text.replace(old, f'"mainJsPath":"main.dart.js?v={version}"'),
+              encoding='utf-8',
+          )
+
           expected = {
-              'index.html': '2dc11e166b5891593b313b9f27b4bc5a2bb4a3aaf1a61a8e13b830893da6571d',
-              'flutter_bootstrap.js': 'b84067e0bc8820e3b4bc524c2847d87641966a5d9226e4f341486884d530449d',
-              'main.dart.js': '8b11ec36ddee15daf5e2702b0d539f45d1ae4b1abf5c993808c10f110ae508f9',
+              'index.html': '5a089e986b0e14511274bbb3b200e42b2612f1579be7c46b7ebcfc7ed7a3569c',
+              'flutter_bootstrap.js': '9716766c51b8d50c66db4d7740e6a236b28ef05736e661716e89566af83bcda9',
+              'main.dart.js': 'c5d5e5d92f9e06c91b9cb0952b67432b2b066fb7e74c0f3c32394481d60e128d',
           }
           for name, digest in expected.items():
               actual = hashlib.sha256(Path(name).read_bytes()).hexdigest()
@@ -71,7 +106,7 @@ jobs:
           git config user.name "alice-deploy-bot"
           git config user.email "actions@users.noreply.github.com"
           git add -A
-          git commit -m "Deploy Steampunk Alice ac0b2ed6"
+          git commit -m "Deploy managed Steampunk Alice fcfa99d6"
           git push origin main
 
       - name: Verify files served by GitHub Pages
@@ -83,24 +118,49 @@ jobs:
           import urllib.request
 
           base = 'https://ht8hcrmswh-hue.github.io/english_word_app/'
-          version = 'ac0b2ed6'
-          names = ('index.html', 'flutter_bootstrap.js', 'main.dart.js')
-          expected = {name: hashlib.sha256(Path(name).read_bytes()).hexdigest() for name in names}
-          probes = ('',) + names
+          version = 'fcfa99d6'
+
+          local_paths = {
+              '': Path('index.html'),
+              'index.html': Path('index.html'),
+              'flutter_bootstrap.js': Path('flutter_bootstrap.js'),
+              'main.dart.js': Path('main.dart.js'),
+              'assets/assets/images/themes/steampunk/manifest.json':
+                  Path('assets/assets/images/themes/steampunk/manifest.json'),
+              'assets/assets/images/themes/steampunk/title.webp':
+                  Path('assets/assets/images/themes/steampunk/title.webp'),
+              'assets/assets/images/themes/steampunk/level_front.webp':
+                  Path('assets/assets/images/themes/steampunk/level_front.webp'),
+              'assets/assets/images/themes/steampunk/level_back.webp':
+                  Path('assets/assets/images/themes/steampunk/level_back.webp'),
+              'assets/assets/images/themes/steampunk/quiz_unanswered.webp':
+                  Path('assets/assets/images/themes/steampunk/quiz_unanswered.webp'),
+              'assets/assets/images/themes/steampunk/quiz_answered.webp':
+                  Path('assets/assets/images/themes/steampunk/quiz_answered.webp'),
+              'assets/assets/images/themes/steampunk/result.webp':
+                  Path('assets/assets/images/themes/steampunk/result.webp'),
+              'assets/assets/images/themes/steampunk/world_map.webp':
+                  Path('assets/assets/images/themes/steampunk/world_map.webp'),
+          }
+          expected = {
+              name: hashlib.sha256(path.read_bytes()).hexdigest()
+              for name, path in local_paths.items()
+          }
+
           for attempt in range(36):
               try:
-                  for name in probes:
+                  for name, digest in expected.items():
                       req = urllib.request.Request(
                           base + name + f'?v={version}',
                           headers={'Cache-Control': 'no-cache'},
                       )
                       with urllib.request.urlopen(req, timeout=20) as response:
                           actual = hashlib.sha256(response.read()).hexdigest()
-                      if actual != expected[name or 'index.html']:
+                      if actual != digest:
                           raise ValueError((name or 'root page') + ' has not been updated yet')
                   print('PAGES VERIFIED', version)
-                  for name in names:
-                      print(name, expected[name])
+                  for name, digest in expected.items():
+                      print(name or 'root page', digest)
                   break
               except Exception as error:
                   if attempt == 35:
