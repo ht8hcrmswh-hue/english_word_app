@@ -8,40 +8,168 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: alice-pages-deploy
+  cancel-in-progress: false
+
+# Populate only after this SOURCE_SHA passes CI, code and visual audits.
+# EXPECTED_PUBLIC_MAIN_SHA is the public main snapshot BEFORE committing this
+# workflow update. The trigger commit must be its direct child and may change
+# only this workflow. Neither branch protection nor divergent main is bypassed.
+env:
+  ARTIFACT_URL: 'https://sdmntprwestus3.oaiusercontent.com/files/00000000-8824-81fd-8a22-9a8ab82b54ed/raw?se=2026-09-23T02%3A50%3A23Z&sp=r&sv=2026-02-06&sr=b&scid=b203190d-563c-4740-a145-cb077e75b52a&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T01%3A09%3A10Z&ske=2026-09-24T01%3A09%3A10Z&sks=b&skv=2026-02-06&sig=42ybLrz2WrdVMZUsm1qUXpUivblcMXEZm16S5riiZZg%3D'
+  ZIP_SHA256: '20a44932df06d0a1c22505316e6cd5284d73cdfc511cf5731f6ab22dc0ab4081'
+  JS_SHA256: '25f4a8ce1109f0803508c563ab15589cd49009ec2dac9fd81f43a8f04fb98346'
+  SOURCE_SHA: 'b85eb0f93b733d634e5813d4a982605562d1eb9d'
+  EXPECTED_INDEX_SHA256: '944e73ce48db17af3a0bcaac6222ce278e830adaf71bf48e57ba5053017860dc'
+  EXPECTED_BOOTSTRAP_SHA256: '319912cc342251fc4fa3b25263665105e742f5817b6a7fef3c5d9774d1a50e75'
+  EXPECTED_PUBLIC_MAIN_SHA: '35bc9564a5421b98b0a55d6ff3379aa82d8a6fca'
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
 
-      - name: Download verified Alice build
-        env:
-          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-0004-8209-97a1-c3bd3c959e11/raw?se=2026-09-22T00%3A05%3A05Z&sp=r&sv=2026-02-06&sr=b&scid=2ee341fb-e428-5945-9c5e-edabd6828a41&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-21T23%3A25%3A55Z&ske=2026-09-22T23%3A25%3A55Z&sks=b&skv=2026-02-06&sig=ex6k0y5%2BWM10sn4vtegrOXxf%2BImZXPvGyfom%2BbPD53I%3D"
+      - name: Validate release inputs and public main snapshot
+        shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --max-time 120 "$ARTIFACT_URL" -o /tmp/alice-web-build.zip
-          echo 'e222afe23e6ca70719b4b4518d27b0fa8a94cc7a3bf1d36ee1c7075012b17bd7  /tmp/alice-web-build.zip' | sha256sum --check
-          rm -rf /tmp/alice-build
-          mkdir -p /tmp/alice-build
-          unzip -q /tmp/alice-web-build.zip -d /tmp/alice-build
-
-      - name: Verify source build
-        run: |
-          set -euo pipefail
-          echo 'c5d5e5d92f9e06c91b9cb0952b67432b2b066fb7e74c0f3c32394481d60e128d  /tmp/alice-build/main.dart.js' | sha256sum --check
           python3 - <<'PY'
-          from pathlib import Path
+          import os
+          import re
+          import subprocess
+          from urllib.parse import urlsplit
+
+          for key in ('SOURCE_SHA', 'EXPECTED_PUBLIC_MAIN_SHA'):
+              if not re.fullmatch(r'[0-9a-f]{40}', os.environ[key]):
+                  raise SystemExit(f'Missing or invalid {key}; deployment is disabled.')
+          for key in ('ZIP_SHA256', 'JS_SHA256', 'EXPECTED_INDEX_SHA256',
+                      'EXPECTED_BOOTSTRAP_SHA256'):
+              if not re.fullmatch(r'[0-9a-f]{64}', os.environ[key]):
+                  raise SystemExit(f'Missing or invalid {key}; deployment is disabled.')
+          url = urlsplit(os.environ['ARTIFACT_URL'])
+          if url.scheme != 'https' or not url.hostname or url.username or url.password:
+              raise SystemExit('ARTIFACT_URL must be an HTTPS artifact URL.')
+
+          def git(*args):
+              return subprocess.check_output(['git', *args], text=True).strip()
+
+          trigger = os.environ['GITHUB_SHA']
+          expected = os.environ['EXPECTED_PUBLIC_MAIN_SHA']
+          if git('rev-parse', 'HEAD') != trigger:
+              raise SystemExit('Checkout is not the triggering commit.')
+          parents = git('show', '-s', '--format=%P', 'HEAD').split()
+          if parents != [expected]:
+              raise SystemExit('Unexpected public main parent; re-inspect before deployment.')
+          changed = git('diff', '--name-only', expected, trigger).splitlines()
+          if changed != ['.github/workflows/deploy-steampunk.yml']:
+              raise SystemExit(f'Trigger contains unexpected changes: {changed}')
+          remote = git('ls-remote', 'origin', 'refs/heads/main').split()
+          if not remote or remote[0] != trigger:
+              raise SystemExit('Public main advanced; deployment stopped without rewriting it.')
+          PY
+
+      - name: Download and safely extract verified Alice build
+        shell: bash
+        run: |
+          set -euo pipefail
+          release_dir="$(mktemp -d "$RUNNER_TEMP/alice-release.XXXXXX")"
+          export ALICE_RELEASE_DIR="$release_dir"
+          printf 'ALICE_RELEASE_DIR=%s\n' "$release_dir" >> "$GITHUB_ENV"
+          curl --fail --location --proto '=https' --proto-redir '=https' \
+            --max-time 120 --max-filesize 536870912 \
+            "$ARTIFACT_URL" -o "$release_dir/build.zip"
+          printf '%s  %s\n' "$ZIP_SHA256" "$release_dir/build.zip" | sha256sum --check
+          python3 - <<'PY'
+          import json
+          import os
+          import shutil
+          import stat
+          import zipfile
+          from pathlib import Path, PurePosixPath
+
+          release = Path(os.environ['ALICE_RELEASE_DIR'])
+          root = release / 'web'
+          root.mkdir()
+          allowed_files = {
+              'favicon.png', 'flutter.js', 'flutter_bootstrap.js',
+              'flutter_service_worker.js', 'index.html', 'main.dart.js',
+              'manifest.json', 'version.json', '.nojekyll',
+          }
+          allowed_directories = {'assets', 'canvaskit', 'icons'}
+          required_files = allowed_files - {'.nojekyll'}
+          paths = []
+          seen = set()
+          with zipfile.ZipFile(release / 'build.zip') as archive:
+              entries = archive.infolist()
+              if len(entries) > 10000 or sum(i.file_size for i in entries) > 536870912:
+                  raise SystemExit('Archive exceeds release size limits.')
+              for entry in entries:
+                  name = entry.filename
+                  path = PurePosixPath(name)
+                  if (not name or '\\' in name or ':' in name or '\x00' in name
+                          or path.is_absolute() or '..' in path.parts
+                          or path.as_posix() != name.rstrip('/')):
+                      raise SystemExit(f'Unsafe archive path: {name!r}')
+                  folded = name.rstrip('/').casefold()
+                  if folded in seen:
+                      raise SystemExit(f'Duplicate archive path: {name!r}')
+                  seen.add(folded)
+                  if any(part in {'.git', '.github'} for part in path.parts):
+                      raise SystemExit('Archive contains repository administration paths.')
+                  if path.parts[0] not in allowed_directories:
+                      if len(path.parts) != 1 or name not in allowed_files or entry.is_dir():
+                          raise SystemExit(f'Unexpected build path: {name!r}')
+                  kind = stat.S_IFMT(entry.external_attr >> 16)
+                  if kind not in {0, stat.S_IFREG, stat.S_IFDIR}:
+                      raise SystemExit(f'Non-regular archive entry: {name!r}')
+                  if entry.flag_bits & 1:
+                      raise SystemExit('Encrypted build entries are not permitted.')
+                  if not entry.is_dir():
+                      paths.append(name)
+              if not required_files.issubset(paths):
+                  raise SystemExit(f'Missing build files: {required_files - set(paths)}')
+              # Validate every path before extracting any entry; no extractall.
+              for entry in entries:
+                  destination = root.joinpath(*PurePosixPath(entry.filename).parts)
+                  if entry.is_dir():
+                      destination.mkdir(parents=True, exist_ok=True)
+                  else:
+                      destination.parent.mkdir(parents=True, exist_ok=True)
+                      with archive.open(entry) as source, destination.open('xb') as target:
+                          shutil.copyfileobj(source, target)
+          (release / 'build-paths.json').write_text(json.dumps(sorted(paths)), encoding='utf-8')
+          PY
+
+      - name: Verify build and retained theme archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
           import hashlib
           import json
+          import os
+          from pathlib import Path
 
-          root = Path('/tmp/alice-build/assets/assets/images/themes/steampunk')
+          web = Path(os.environ['ALICE_RELEASE_DIR']) / 'web'
+          assert hashlib.sha256((web / 'main.dart.js').read_bytes()).hexdigest() == os.environ['JS_SHA256']
+          index = (web / 'index.html').read_text(encoding='utf-8')
+          assert index.count('<base href="/english_word_app/">') == 1, 'Wrong Pages base href'
+          assert json.loads((web / 'manifest.json').read_text(encoding='utf-8'))['start_url'] == '.', 'Changed app start URL'
+
+          root = web / 'assets/assets/images/themes/steampunk'
           manifest_path = root / 'manifest.json'
           manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
           assert manifest['id'] == 'steampunk'
           assert manifest['displayName'] == 'スチームパンク'
           assert manifest['themeVersion'] == 1
-
+          # Preserve the approved schema-1 archive. Only the title is used by
+          # the UI-first skin; the other six images are retained, not recreated.
           expected = {
               'title': ('title.webp', 48836, '05fff182c62be55d1441139b7624e7f12433f6702159dfdf0faccea747aac9a9'),
               'levelFront': ('level_front.webp', 37462, '5db8257c3e52cb444ee5b1b18fdacc5725211cfc582da978f6f6b6c2969b1604'),
@@ -57,114 +185,131 @@ jobs:
               path = root / name
               assert path.stat().st_size == size, (name, path.stat().st_size)
               assert hashlib.sha256(path.read_bytes()).hexdigest() == digest, name
-
           assert hashlib.sha256(manifest_path.read_bytes()).hexdigest() == '428b1fb1f04f010e117540eadda5171362b20cfc0e857a728a323b44156be2a4'
           PY
 
-      - name: Replace Pages build and add cache busting
+      - name: Add cache busting and overlay build files without deletions
+        shell: bash
         run: |
           set -euo pipefail
-          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
-          cp -a /tmp/alice-build/. .
           python3 - <<'PY'
-          from pathlib import Path
           import hashlib
+          import json
+          import os
+          import shutil
+          from pathlib import Path, PurePosixPath
 
-          version = 'fcfa99d6'
-
-          index = Path('index.html')
-          text = index.read_text(encoding='utf-8')
-          old = 'src="flutter_bootstrap.js"'
-          assert text.count(old) == 1, 'Unexpected bootstrap reference'
-          index.write_text(
-              text.replace(old, f'src="flutter_bootstrap.js?v={version}"'),
-              encoding='utf-8',
-          )
-
-          bootstrap = Path('flutter_bootstrap.js')
-          text = bootstrap.read_text(encoding='utf-8')
-          old = '"mainJsPath":"main.dart.js"'
-          assert text.count(old) == 1, 'Unexpected main script reference'
-          bootstrap.write_text(
-              text.replace(old, f'"mainJsPath":"main.dart.js?v={version}"'),
-              encoding='utf-8',
-          )
-
+          release = Path(os.environ['ALICE_RELEASE_DIR'])
+          web = release / 'web'
+          version = os.environ['SOURCE_SHA']
+          replacements = {
+              'index.html': ('src="flutter_bootstrap.js"', f'src="flutter_bootstrap.js?v={version}"'),
+              'flutter_bootstrap.js': ('"mainJsPath":"main.dart.js"', f'"mainJsPath":"main.dart.js?v={version}"'),
+          }
+          for name, (old, new) in replacements.items():
+              path = web / name
+              content = path.read_text(encoding='utf-8')
+              assert content.count(old) == 1, f'Unexpected script reference: {name}'
+              path.write_text(content.replace(old, new), encoding='utf-8')
           expected = {
-              'index.html': '5a089e986b0e14511274bbb3b200e42b2612f1579be7c46b7ebcfc7ed7a3569c',
-              'flutter_bootstrap.js': '9716766c51b8d50c66db4d7740e6a236b28ef05736e661716e89566af83bcda9',
-              'main.dart.js': 'c5d5e5d92f9e06c91b9cb0952b67432b2b066fb7e74c0f3c32394481d60e128d',
+              'index.html': os.environ['EXPECTED_INDEX_SHA256'],
+              'flutter_bootstrap.js': os.environ['EXPECTED_BOOTSTRAP_SHA256'],
+              'main.dart.js': os.environ['JS_SHA256'],
           }
           for name, digest in expected.items():
-              actual = hashlib.sha256(Path(name).read_bytes()).hexdigest()
-              assert actual == digest, (name, actual)
+              assert hashlib.sha256((web / name).read_bytes()).hexdigest() == digest, name
+
+          paths = json.loads((release / 'build-paths.json').read_text(encoding='utf-8'))
+          checkout = Path.cwd()
+          for name in paths:
+              parts = PurePosixPath(name).parts
+              destination = checkout
+              for part in parts:
+                  destination = destination / part
+                  if destination.is_symlink():
+                      raise SystemExit(f'Refusing existing symlink: {name}')
+              if destination.exists() and not destination.is_file():
+                  raise SystemExit(f'Refusing to replace non-file: {name}')
+          for name in paths:
+              destination = checkout / name
+              destination.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(web / name, destination)
+          (release / 'stage-paths.nul').write_bytes(b'\x00'.join(name.encode('utf-8') for name in paths) + b'\x00')
+          # No file is deleted; .github, .git and unrelated paths are preserved.
           PY
 
-      - name: Publish build
+      - name: Publish only verified build paths
+        shell: bash
         run: |
           set -euo pipefail
-          git config user.name "alice-deploy-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add -A
-          git commit -m "Deploy managed Steampunk Alice fcfa99d6"
-          git push origin main
+          remote_main="$(git ls-remote origin refs/heads/main | cut -f1)"
+          test "$remote_main" = "$GITHUB_SHA" || { echo 'Public main advanced; stopping.'; exit 1; }
+          GIT_LITERAL_PATHSPECS=1 git add --pathspec-from-file="$ALICE_RELEASE_DIR/stage-paths.nul" --pathspec-file-nul
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          expected = set(json.loads((Path(os.environ['ALICE_RELEASE_DIR']) / 'build-paths.json').read_text(encoding='utf-8')))
+          staged = subprocess.check_output(['git', 'diff', '--cached', '--name-only', '-z']).decode('utf-8').split('\x00')
+          assert set(filter(None, staged)).issubset(expected), 'Unrelated staged change'
+          deleted = subprocess.check_output(['git', 'diff', '--cached', '--diff-filter=D', '--name-only'])
+          assert not deleted, 'Deletions are not part of this release'
+          PY
+          if ! git diff --cached --quiet; then
+            git config user.name "alice-deploy-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git commit -m "Deploy audited Steampunk UI from source $SOURCE_SHA"
+            git push origin HEAD:main
+          fi
+          printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify files served by GitHub Pages
+        shell: bash
         run: |
+          set -euo pipefail
           python3 - <<'PY'
-          from pathlib import Path
           import hashlib
+          import os
           import time
           import urllib.request
+          from pathlib import Path
 
           base = 'https://ht8hcrmswh-hue.github.io/english_word_app/'
-          version = 'fcfa99d6'
-
-          local_paths = {
-              '': Path('index.html'),
-              'index.html': Path('index.html'),
-              'flutter_bootstrap.js': Path('flutter_bootstrap.js'),
-              'main.dart.js': Path('main.dart.js'),
-              'assets/assets/images/themes/steampunk/manifest.json':
-                  Path('assets/assets/images/themes/steampunk/manifest.json'),
-              'assets/assets/images/themes/steampunk/title.webp':
-                  Path('assets/assets/images/themes/steampunk/title.webp'),
-              'assets/assets/images/themes/steampunk/level_front.webp':
-                  Path('assets/assets/images/themes/steampunk/level_front.webp'),
-              'assets/assets/images/themes/steampunk/level_back.webp':
-                  Path('assets/assets/images/themes/steampunk/level_back.webp'),
-              'assets/assets/images/themes/steampunk/quiz_unanswered.webp':
-                  Path('assets/assets/images/themes/steampunk/quiz_unanswered.webp'),
-              'assets/assets/images/themes/steampunk/quiz_answered.webp':
-                  Path('assets/assets/images/themes/steampunk/quiz_answered.webp'),
-              'assets/assets/images/themes/steampunk/result.webp':
-                  Path('assets/assets/images/themes/steampunk/result.webp'),
-              'assets/assets/images/themes/steampunk/world_map.webp':
-                  Path('assets/assets/images/themes/steampunk/world_map.webp'),
-          }
-          expected = {
-              name: hashlib.sha256(path.read_bytes()).hexdigest()
-              for name, path in local_paths.items()
-          }
-
-          for attempt in range(36):
+          version = os.environ['SOURCE_SHA']
+          names = [
+              '', 'index.html', 'flutter_bootstrap.js', 'main.dart.js',
+              'flutter_service_worker.js', 'manifest.json', 'version.json',
+              'assets/assets/images/themes/steampunk/manifest.json',
+              *[f'assets/assets/images/themes/steampunk/{name}.webp' for name in (
+                  'title', 'level_front', 'level_back', 'quiz_unanswered',
+                  'quiz_answered', 'result', 'world_map',
+              )],
+          ]
+          expected = {name: hashlib.sha256(Path(name or 'index.html').read_bytes()).hexdigest() for name in names}
+          deadline = time.monotonic() + 420
+          while True:
               try:
                   for name, digest in expected.items():
-                      req = urllib.request.Request(
+                      request = urllib.request.Request(
                           base + name + f'?v={version}',
                           headers={'Cache-Control': 'no-cache'},
                       )
-                      with urllib.request.urlopen(req, timeout=20) as response:
+                      with urllib.request.urlopen(request, timeout=15) as response:
                           actual = hashlib.sha256(response.read()).hexdigest()
                       if actual != digest:
-                          raise ValueError((name or 'root page') + ' has not been updated yet')
-                  print('PAGES VERIFIED', version)
+                          raise ValueError((name or 'root page') + ' differs from the verified build')
+                  print('PAGES FILES VERIFIED', version)
                   for name, digest in expected.items():
                       print(name or 'root page', digest)
                   break
               except Exception as error:
-                  if attempt == 35:
+                  if time.monotonic() >= deadline:
                       raise
                   print('Waiting for Pages:', str(error), flush=True)
                   time.sleep(5)
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as summary:
+              summary.write('Public entrypoints and retained theme files match the verified build.\n')
+              summary.write('Confirm the Pages deployment job and real-device operation separately.\n')
           PY
