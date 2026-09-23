@@ -1,4 +1,4 @@
-name: Deploy Alice Deep Sea Preview
+name: Deploy Alice Skin Selection Fix
 
 on:
   push:
@@ -17,15 +17,15 @@ concurrency:
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-4a38-8209-a36a-0dfbbb5c4a2f/raw?se=2026-09-23T04%3A53%3A24Z&sp=r&sv=2026-02-06&sr=b&scid=9fc6e130-908e-4a52-8582-cbe5783fe42d&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T01%3A09%3A05Z&ske=2026-09-24T01%3A09%3A05Z&sks=b&skv=2026-02-06&sig=6KZMxOWRaGUa3mKPUbcHFxwvRJQuhsl8pm%2ByXUmRC8o%3D'
-  ZIP_SHA256: '4efccc52768847ae7c46b18f4720d45c38787a2f86c27615fb4b58d9e0aa1ebe'
-  SOURCE_SHA: '4fae6421fdddfc60cadedeaa1c429831878b426c'
-  EXPECTED_PUBLIC_MAIN_SHA: '9093ad6116c7a75305d63c80b6cacbfaee202246'
+  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-069c-8209-81b1-0d9c36d0af4c/raw?se=2026-09-23T05%3A18%3A56Z&sp=r&sv=2026-02-06&sr=b&scid=e06fea92-e137-4458-82b1-51823c28a4ee&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T02%3A53%3A08Z&ske=2026-09-24T02%3A53%3A08Z&sks=b&skv=2026-02-06&sig=9sM7xhr0kv0Y7By8uVsCDE00DQWhFd246BFclG9nuxo%3D'
+  ZIP_SHA256: 'fc76f32c6e06cac146347cd77c9471ffe8961a2bef727effc534f5b12f7838a7'
+  SOURCE_SHA: '117c9e09e48a1fc983150f288cd05eb543f3b3d8'
+  EXPECTED_PUBLIC_MAIN_SHA: '9b11ec162e987159428599670956190f08de2d02'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v6
         with:
@@ -256,7 +256,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy device-review Deep Sea LEVEL front from source $SOURCE_SHA"
+            git commit -m "Deploy Deep Sea selection fix from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
@@ -284,7 +284,7 @@ jobs:
               )],
           ]
           expected = {name: hashlib.sha256(Path(name or 'index.html').read_bytes()).hexdigest() for name in names}
-          deadline = time.monotonic() + 420
+          deadline = time.monotonic() + 180
           while True:
               try:
                   for name, digest in expected.items():
