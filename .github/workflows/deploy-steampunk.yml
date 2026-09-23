@@ -1,4 +1,4 @@
-name: Deploy Alice Skin Selection Fix
+name: Deploy Alice Complete Deep Sea Set
 
 on:
   push:
@@ -17,10 +17,10 @@ concurrency:
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-069c-8209-81b1-0d9c36d0af4c/raw?se=2026-09-23T05%3A18%3A56Z&sp=r&sv=2026-02-06&sr=b&scid=e06fea92-e137-4458-82b1-51823c28a4ee&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T02%3A53%3A08Z&ske=2026-09-24T02%3A53%3A08Z&sks=b&skv=2026-02-06&sig=9sM7xhr0kv0Y7By8uVsCDE00DQWhFd246BFclG9nuxo%3D'
-  ZIP_SHA256: 'fc76f32c6e06cac146347cd77c9471ffe8961a2bef727effc534f5b12f7838a7'
-  SOURCE_SHA: '117c9e09e48a1fc983150f288cd05eb543f3b3d8'
-  EXPECTED_PUBLIC_MAIN_SHA: '9b11ec162e987159428599670956190f08de2d02'
+  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-7470-8209-83ce-e5192bad61b1/raw?se=2026-09-23T06%3A23%3A55Z&sp=r&sv=2026-02-06&sr=b&scid=cb733f69-28c5-4251-9674-3887b8aacb1c&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-22T23%3A02%3A39Z&ske=2026-09-23T23%3A02%3A39Z&sks=b&skv=2026-02-06&sig=qHdSIhhsdF1u6I6IjdKUnMmhuHjnqCFy4%2BlUzPJZORM%3D'
+  ZIP_SHA256: '063ceb3d8b80f763c891056046fe8c8b62af57bed2da0ba1e306a6bd76d052b8'
+  SOURCE_SHA: '4db1d12e1f2fd447ae984513ba5a34d2302a1d84'
+  EXPECTED_PUBLIC_MAIN_SHA: 'fa23a2eebec1ee214ef88aaec4017628bc5a1085'
 
 jobs:
   deploy:
@@ -256,7 +256,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy Deep Sea selection fix from source $SOURCE_SHA"
+            git commit -m "Deploy complete Deep Sea set from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
