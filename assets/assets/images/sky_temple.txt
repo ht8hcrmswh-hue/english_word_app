@@ -1,0 +1,7 @@
+Sky Temple (天空の神殿) theme artwork
+Created: 2026-09-23, OpenAI image generation, from the user-approved Alice Sky Temple concept board.
+sky_temple_title.webp: 851 x 1847, text-free title scenery and decorative plaques.
+sky_temple_common.webp: 851 x 1847, shared colonnade/cloud scenery for all study surfaces.
+All title text, version and animated start prompt are rendered by Alice, not baked into images.
+No third-party artwork or font file was introduced. Existing study fonts remain unchanged.
+Marble panel veins and architectural gold edging are painted by sky_temple_panel_finish.dart.
