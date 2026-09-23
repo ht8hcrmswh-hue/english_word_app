@@ -1,0 +1,11 @@
+Deep Sea palace title artwork
+
+Generated for Alice with OpenAI image generation, 2026-09-23.
+Approved by the user in the Alice Deep Sea theme conversation.
+Original composition: 851 x 1847. WebP encoding preserves that composition.
+No external photographs, third-party artwork, or font files were added.
+
+The image includes Alice, Version:1.0 and Tap to Start lettering.
+TitleScreen supplies accessibility labels and live start handling separately.
+When changing the displayed app version, update the artwork and
+appVersionLabel together so visual and spoken versions remain consistent.
