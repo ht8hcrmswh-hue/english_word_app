@@ -1,4 +1,4 @@
-name: Deploy Alice Complete Deep Sea Set
+name: Deploy Deep Sea Readability Fix
 
 on:
   push:
@@ -17,15 +17,15 @@ concurrency:
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-7470-8209-83ce-e5192bad61b1/raw?se=2026-09-23T06%3A23%3A55Z&sp=r&sv=2026-02-06&sr=b&scid=cb733f69-28c5-4251-9674-3887b8aacb1c&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-22T23%3A02%3A39Z&ske=2026-09-23T23%3A02%3A39Z&sks=b&skv=2026-02-06&sig=qHdSIhhsdF1u6I6IjdKUnMmhuHjnqCFy4%2BlUzPJZORM%3D'
-  ZIP_SHA256: '063ceb3d8b80f763c891056046fe8c8b62af57bed2da0ba1e306a6bd76d052b8'
-  SOURCE_SHA: '4db1d12e1f2fd447ae984513ba5a34d2302a1d84'
-  EXPECTED_PUBLIC_MAIN_SHA: 'fa23a2eebec1ee214ef88aaec4017628bc5a1085'
+  ARTIFACT_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-c310-81f5-9894-c7249ea888e8/raw?se=2026-09-23T06%3A58%3A56Z&sp=r&sv=2026-02-06&sr=b&scid=31944e5e-e0c9-483e-9d78-5f1356937b2f&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T05%3A21%3A19Z&ske=2026-09-24T05%3A21%3A19Z&sks=b&skv=2026-02-06&sig=KQUxHXfY7MmXlyapvAoAWNGkSGZcCmt/7AAihj46iRk%3D'
+  ZIP_SHA256: '6105b07692eeecd3a2145e1b71aed1556af4535ef7a4a09fce236ba416afe12f'
+  SOURCE_SHA: '7b0298339ed082f57a8a243248f8845da8661963'
+  EXPECTED_PUBLIC_MAIN_SHA: '425c7d9e50db3ced5029faf5e37b589568a87b0b'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@v6
         with:
@@ -256,7 +256,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy complete Deep Sea set from source $SOURCE_SHA"
+            git commit -m "Deploy Deep Sea readability fixes from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
@@ -284,7 +284,7 @@ jobs:
               )],
           ]
           expected = {name: hashlib.sha256(Path(name or 'index.html').read_bytes()).hexdigest() for name in names}
-          deadline = time.monotonic() + 180
+          deadline = time.monotonic() + 90
           while True:
               try:
                   for name, digest in expected.items():
