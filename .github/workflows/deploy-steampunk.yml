@@ -1,4 +1,4 @@
-name: Deploy Deep Sea Title Behavior
+name: Deploy Sky Temple Skin
 
 on:
   push:
@@ -17,10 +17,10 @@ concurrency:
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-bc18-8206-b82a-e6d2c63a2ba1/raw?se=2026-09-23T10%3A25%3A37Z&sp=r&sv=2026-02-06&sr=b&scid=ec43ee57-196c-47b7-9df5-53128e44bdc8&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T03%3A33%3A04Z&ske=2026-09-24T03%3A33%3A04Z&sks=b&skv=2026-02-06&sig=i/BJAAAOjaSHaGjBkp6sET1b6eMhuM7Picsl%2B9L4NXk%3D'
-  ZIP_SHA256: '13ce8074ff16ecd5fe5ec66d3e2854192d409a0633b7818f19d53700d666599a'
-  SOURCE_SHA: '68c1c76311636172a60fb06ef6850f72a7ad1f97'
-  EXPECTED_PUBLIC_MAIN_SHA: '910fd6da68b52872bb5c516619be7b8627b562f0'
+  ARTIFACT_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-2e2c-81f5-b815-82750e47298b/raw?se=2026-09-23T11%3A09%3A48Z&sp=r&sv=2026-02-06&sr=b&scid=69a1867f-fb17-4085-b061-7bcaf9299f42&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T07%3A46%3A31Z&ske=2026-09-24T07%3A46%3A31Z&sks=b&skv=2026-02-06&sig=xmKoziC3GwbnhbRHh47fpRQVAPnuBv8e00uXCi5s8QA%3D'
+  ZIP_SHA256: '834fa6bb880847ef0797643e6c1bcc004d4d5490bb63d6e1e0004e3003d0a86b'
+  SOURCE_SHA: '5e8c1aceb08c2283d5cda0d3867ccb31cd69c2d3'
+  EXPECTED_PUBLIC_MAIN_SHA: '82795bf8ac8c542ef7bc4bf2cfc984a9a9b3c430'
 
 jobs:
   deploy:
@@ -170,6 +170,14 @@ jobs:
           assert clean.stat().st_size == 294636, 'Unexpected clean palace artwork size'
           assert hashlib.sha256(clean.read_bytes()).hexdigest() == 'e58b14d2db12e43ef5a1409575eec03a7a0c091aae4ce847427dc01ba71145d5', 'Clean palace artwork differs from reviewed asset'
 
+          for name, size, digest in (
+              ('sky_temple_title.webp', 271324, 'bcd975c206c79ac1a13627b7a9bf23f7aa18e39e3cf9efcdbd9609cd8ff4625e'),
+              ('sky_temple_common.webp', 174752, 'feb7f8ec1dc74247d3a733cb2d1d97c313c2b9c30446f4010e24ee33576fe3f2'),
+          ):
+              asset = web / 'assets/assets/images' / name
+              assert asset.stat().st_size == size, name
+              assert hashlib.sha256(asset.read_bytes()).hexdigest() == digest, name
+
           root = web / 'assets/assets/images/themes/steampunk'
           manifest_path = root / 'manifest.json'
           manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -264,7 +272,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy Deep Sea title behavior from source $SOURCE_SHA"
+            git commit -m "Deploy Sky Temple skin from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
@@ -287,6 +295,8 @@ jobs:
               'flutter_service_worker.js', 'manifest.json', 'version.json',
               'assets/assets/images/deep_sea_palace_title.webp',
               'assets/assets/images/deep_sea_palace_title_clean.webp',
+              'assets/assets/images/sky_temple_title.webp',
+              'assets/assets/images/sky_temple_common.webp',
               'assets/assets/images/themes/steampunk/manifest.json',
               *[f'assets/assets/images/themes/steampunk/{name}.webp' for name in (
                   'title', 'level_front', 'level_back', 'quiz_unanswered',
