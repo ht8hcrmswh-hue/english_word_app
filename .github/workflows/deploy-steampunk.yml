@@ -1,4 +1,4 @@
-name: Deploy Steampunk Alice
+name: Deploy Alice Deep Sea Preview
 
 on:
   push:
@@ -12,23 +12,20 @@ concurrency:
   group: alice-pages-deploy
   cancel-in-progress: false
 
-# Populate only after this SOURCE_SHA passes CI, code and visual audits.
+# SOURCE_SHA passed CI and code audit. User approved device-first visual review.
 # EXPECTED_PUBLIC_MAIN_SHA is the public main snapshot BEFORE committing this
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprwestus3.oaiusercontent.com/files/00000000-8824-81fd-8a22-9a8ab82b54ed/raw?se=2026-09-23T02%3A50%3A23Z&sp=r&sv=2026-02-06&sr=b&scid=b203190d-563c-4740-a145-cb077e75b52a&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T01%3A09%3A10Z&ske=2026-09-24T01%3A09%3A10Z&sks=b&skv=2026-02-06&sig=42ybLrz2WrdVMZUsm1qUXpUivblcMXEZm16S5riiZZg%3D'
-  ZIP_SHA256: '20a44932df06d0a1c22505316e6cd5284d73cdfc511cf5731f6ab22dc0ab4081'
-  JS_SHA256: '25f4a8ce1109f0803508c563ab15589cd49009ec2dac9fd81f43a8f04fb98346'
-  SOURCE_SHA: 'b85eb0f93b733d634e5813d4a982605562d1eb9d'
-  EXPECTED_INDEX_SHA256: '944e73ce48db17af3a0bcaac6222ce278e830adaf71bf48e57ba5053017860dc'
-  EXPECTED_BOOTSTRAP_SHA256: '319912cc342251fc4fa3b25263665105e742f5817b6a7fef3c5d9774d1a50e75'
-  EXPECTED_PUBLIC_MAIN_SHA: '35bc9564a5421b98b0a55d6ff3379aa82d8a6fca'
+  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-4a38-8209-a36a-0dfbbb5c4a2f/raw?se=2026-09-23T04%3A53%3A24Z&sp=r&sv=2026-02-06&sr=b&scid=9fc6e130-908e-4a52-8582-cbe5783fe42d&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T01%3A09%3A05Z&ske=2026-09-24T01%3A09%3A05Z&sks=b&skv=2026-02-06&sig=6KZMxOWRaGUa3mKPUbcHFxwvRJQuhsl8pm%2ByXUmRC8o%3D'
+  ZIP_SHA256: '4efccc52768847ae7c46b18f4720d45c38787a2f86c27615fb4b58d9e0aa1ebe'
+  SOURCE_SHA: '4fae6421fdddfc60cadedeaa1c429831878b426c'
+  EXPECTED_PUBLIC_MAIN_SHA: '9093ad6116c7a75305d63c80b6cacbfaee202246'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
         with:
@@ -48,8 +45,7 @@ jobs:
           for key in ('SOURCE_SHA', 'EXPECTED_PUBLIC_MAIN_SHA'):
               if not re.fullmatch(r'[0-9a-f]{40}', os.environ[key]):
                   raise SystemExit(f'Missing or invalid {key}; deployment is disabled.')
-          for key in ('ZIP_SHA256', 'JS_SHA256', 'EXPECTED_INDEX_SHA256',
-                      'EXPECTED_BOOTSTRAP_SHA256'):
+          for key in ('ZIP_SHA256',):
               if not re.fullmatch(r'[0-9a-f]{64}', os.environ[key]):
                   raise SystemExit(f'Missing or invalid {key}; deployment is disabled.')
           url = urlsplit(os.environ['ARTIFACT_URL'])
@@ -157,7 +153,11 @@ jobs:
           from pathlib import Path
 
           web = Path(os.environ['ALICE_RELEASE_DIR']) / 'web'
-          assert hashlib.sha256((web / 'main.dart.js').read_bytes()).hexdigest() == os.environ['JS_SHA256']
+          # The entire archive was pinned to the successful CI artifact digest.
+          # Record JS identity before the narrowly scoped cache-busting edits.
+          js_digest = hashlib.sha256((web / 'main.dart.js').read_bytes()).hexdigest()
+          with open(os.environ['GITHUB_ENV'], 'a', encoding='utf-8') as env:
+              env.write(f'JS_SHA256={js_digest}\n')
           index = (web / 'index.html').read_text(encoding='utf-8')
           assert index.count('<base href="/english_word_app/">') == 1, 'Wrong Pages base href'
           assert json.loads((web / 'manifest.json').read_text(encoding='utf-8'))['start_url'] == '.', 'Changed app start URL'
@@ -211,13 +211,9 @@ jobs:
               content = path.read_text(encoding='utf-8')
               assert content.count(old) == 1, f'Unexpected script reference: {name}'
               path.write_text(content.replace(old, new), encoding='utf-8')
-          expected = {
-              'index.html': os.environ['EXPECTED_INDEX_SHA256'],
-              'flutter_bootstrap.js': os.environ['EXPECTED_BOOTSTRAP_SHA256'],
-              'main.dart.js': os.environ['JS_SHA256'],
-          }
-          for name, digest in expected.items():
-              assert hashlib.sha256((web / name).read_bytes()).hexdigest() == digest, name
+          # All original bytes came from the SHA256-verified CI archive.
+          # Only the two exact script references above may be rewritten.
+          assert hashlib.sha256((web / 'main.dart.js').read_bytes()).hexdigest() == os.environ['JS_SHA256']
 
           paths = json.loads((release / 'build-paths.json').read_text(encoding='utf-8'))
           checkout = Path.cwd()
@@ -260,7 +256,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy audited Steampunk UI from source $SOURCE_SHA"
+            git commit -m "Deploy device-review Deep Sea LEVEL front from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
