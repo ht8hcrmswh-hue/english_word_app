@@ -1,4 +1,4 @@
-name: Deploy Quiz Panel Spacing
+name: Deploy Quiz Annotation Position
 
 on:
   push:
@@ -17,10 +17,10 @@ concurrency:
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprsoutheastus3.oaiusercontent.com/files/00000000-8b40-820c-a05b-87ec2f1d025f/raw?se=2026-09-23T11%3A41%3A52Z&sp=r&sv=2026-02-06&sr=b&scid=632afa4c-6ffd-439c-a3ba-df7b89dbf05a&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T07%3A54%3A29Z&ske=2026-09-24T07%3A54%3A29Z&sks=b&skv=2026-02-06&sig=020BY901tsqcdgFsfQtJocNa30vPnCLgHsJ5%2BRWtTVs%3D'
-  ZIP_SHA256: 'eac7132b4286dc777c7162977338c531b1a1ac049ab3f12e5d677cf93a4538ad'
-  SOURCE_SHA: 'a70261731d598d01819a9efd1208eb2ced5d7b3b'
-  EXPECTED_PUBLIC_MAIN_SHA: '2061afde1ecb66bf2f20e72b4d68e28d78ce75c7'
+  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-e978-8209-bdf7-9ff1d1d96450/raw?se=2026-09-23T12%3A50%3A34Z&sp=r&sv=2026-02-06&sr=b&scid=9ac73d86-840f-4163-88af-f0aa9a4faefd&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T10%3A46%3A01Z&ske=2026-09-24T10%3A46%3A01Z&sks=b&skv=2026-02-06&sig=RAMZP/GtJcSqSSN2kHX8NWXnw3pbwsRyiqVXjru3v3I%3D'
+  ZIP_SHA256: 'd5df06a0ab314978c70ba69ed6a1d2fdeb5b3db72b4e20ca5fe9b637c58d5595'
+  SOURCE_SHA: '68800adc4b0e6a190ce0a1c4b89e17a2b66bb557'
+  EXPECTED_PUBLIC_MAIN_SHA: '74933bb211858fb6a3f56ea85f4689780d5caa53'
 
 jobs:
   deploy:
@@ -272,7 +272,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy quiz panel spacing from source $SOURCE_SHA"
+            git commit -m "Deploy quiz annotation position from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
