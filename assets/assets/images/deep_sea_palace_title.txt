@@ -5,7 +5,9 @@ Approved by the user in the Alice Deep Sea theme conversation.
 Original composition: 851 x 1847. WebP encoding preserves that composition.
 No external photographs, third-party artwork, or font files were added.
 
-The image includes Alice, Version:1.0 and Tap to Start lettering.
-TitleScreen supplies accessibility labels and live start handling separately.
-When changing the displayed app version, update the artwork and
-appVersionLabel together so visual and spoken versions remain consistent.
+The original lettered image is retained as a design reference.
+The runtime uses deep_sea_palace_title_clean.webp with all lettering removed
+using OpenAI image editing. Palace, jellyfish and silver frames are preserved.
+TitleScreen draws title/version/prompt as live text, with shared prompt blinking,
+start flashing, accessibility labels and input handling. Version labels can be
+updated without repainting the artwork.
