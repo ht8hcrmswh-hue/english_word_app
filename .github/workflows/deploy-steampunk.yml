@@ -1,4 +1,4 @@
-name: Deploy Deep Sea Readability Fix
+name: Deploy Deep Sea Palace Title
 
 on:
   push:
@@ -17,15 +17,15 @@ concurrency:
 # workflow update. The trigger commit must be its direct child and may change
 # only this workflow. Neither branch protection nor divergent main is bypassed.
 env:
-  ARTIFACT_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-c310-81f5-9894-c7249ea888e8/raw?se=2026-09-23T06%3A58%3A56Z&sp=r&sv=2026-02-06&sr=b&scid=31944e5e-e0c9-483e-9d78-5f1356937b2f&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T05%3A21%3A19Z&ske=2026-09-24T05%3A21%3A19Z&sks=b&skv=2026-02-06&sig=KQUxHXfY7MmXlyapvAoAWNGkSGZcCmt/7AAihj46iRk%3D'
-  ZIP_SHA256: '6105b07692eeecd3a2145e1b71aed1556af4535ef7a4a09fce236ba416afe12f'
-  SOURCE_SHA: '7b0298339ed082f57a8a243248f8845da8661963'
-  EXPECTED_PUBLIC_MAIN_SHA: '425c7d9e50db3ced5029faf5e37b589568a87b0b'
+  ARTIFACT_URL: 'https://sdmntprjapaneast.oaiusercontent.com/files/00000000-c610-8209-ad50-53b9063dc9ab/raw?se=2026-09-23T09%3A03%3A08Z&sp=r&sv=2026-02-06&sr=b&scid=9ece9f72-4fbc-4534-ab4f-d5837b54fb99&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-23T02%3A53%3A05Z&ske=2026-09-24T02%3A53%3A05Z&sks=b&skv=2026-02-06&sig=h5gUqyNn8yvvhb%2BD5W75K1TRZVSiGH/8BQrJ0RJNXDg%3D'
+  ZIP_SHA256: '65d86f17c248d457d6808495bfae9a58d9e86a1cad2eefb4415e96efa6e64e36'
+  SOURCE_SHA: '76a05a560779ca5d3caeb23a35d03997dbc6ceca'
+  EXPECTED_PUBLIC_MAIN_SHA: '7faf1054b08e67edaa9b9f001fb0e11ee5447b65'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 2
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v6
         with:
@@ -162,6 +162,10 @@ jobs:
           assert index.count('<base href="/english_word_app/">') == 1, 'Wrong Pages base href'
           assert json.loads((web / 'manifest.json').read_text(encoding='utf-8'))['start_url'] == '.', 'Changed app start URL'
 
+          palace = web / 'assets/assets/images/deep_sea_palace_title.webp'
+          assert palace.stat().st_size == 341996, 'Unexpected palace artwork size'
+          assert hashlib.sha256(palace.read_bytes()).hexdigest() == 'cefe0edd3c81bb5dc2af0f62eb179f9ce254455e0d5e04874fcb2979e9ebd80a', 'Palace artwork differs from approved asset'
+
           root = web / 'assets/assets/images/themes/steampunk'
           manifest_path = root / 'manifest.json'
           manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
@@ -256,7 +260,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git config user.name "alice-deploy-bot"
             git config user.email "actions@users.noreply.github.com"
-            git commit -m "Deploy Deep Sea readability fixes from source $SOURCE_SHA"
+            git commit -m "Deploy Deep Sea palace title from source $SOURCE_SHA"
             git push origin HEAD:main
           fi
           printf 'Published repository commit: %s\nSource commit: %s\n' "$(git rev-parse HEAD)" "$SOURCE_SHA" >> "$GITHUB_STEP_SUMMARY"
@@ -277,6 +281,7 @@ jobs:
           names = [
               '', 'index.html', 'flutter_bootstrap.js', 'main.dart.js',
               'flutter_service_worker.js', 'manifest.json', 'version.json',
+              'assets/assets/images/deep_sea_palace_title.webp',
               'assets/assets/images/themes/steampunk/manifest.json',
               *[f'assets/assets/images/themes/steampunk/{name}.webp' for name in (
                   'title', 'level_front', 'level_back', 'quiz_unanswered',
@@ -284,7 +289,7 @@ jobs:
               )],
           ]
           expected = {name: hashlib.sha256(Path(name or 'index.html').read_bytes()).hexdigest() for name in names}
-          deadline = time.monotonic() + 90
+          deadline = time.monotonic() + 180
           while True:
               try:
                   for name, digest in expected.items():
