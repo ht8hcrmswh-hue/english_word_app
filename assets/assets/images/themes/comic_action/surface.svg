@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs>
+    <pattern id="tinyDots" width="34" height="34" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="8" r="3.5" fill="#FFFFFF" opacity="0.08"/>
+    </pattern>
+    <linearGradient id="dark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0D0D10"/>
+      <stop offset="100%" stop-color="#19191E"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#dark)"/>
+  <rect width="1080" height="1920" fill="url(#tinyDots)"/>
+  <path d="M0 0H270L0 330Z" fill="#E51C23" opacity="0.72"/>
+  <path d="M1080 0H895L1080 255Z" fill="#FFD21F" opacity="0.88"/>
+  <path d="M0 1920V1690L245 1920Z" fill="#FFD21F" opacity="0.75"/>
+  <path d="M1080 1920V1605L825 1920Z" fill="#E51C23" opacity="0.62"/>
+  <g stroke="#FFFFFF" stroke-width="7" opacity="0.055">
+    <path d="M-120 510L480 -90"/>
+    <path d="M-70 720L690 -40"/>
+    <path d="M510 1980L1170 1320"/>
+    <path d="M690 1990L1190 1490"/>
+  </g>
+</svg>

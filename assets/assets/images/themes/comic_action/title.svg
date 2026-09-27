@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1920">
+  <defs>
+    <pattern id="dotsRed" width="34" height="34" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="8" r="4" fill="#111111" opacity="0.26"/>
+    </pattern>
+    <pattern id="dotsYellow" width="30" height="30" patternUnits="userSpaceOnUse">
+      <circle cx="8" cy="8" r="3.5" fill="#111111" opacity="0.34"/>
+    </pattern>
+    <linearGradient id="redBase" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F3262D"/>
+      <stop offset="65%" stop-color="#E51C23"/>
+      <stop offset="100%" stop-color="#B90F18"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1080" height="1920" fill="url(#redBase)"/>
+  <rect width="1080" height="1920" fill="url(#dotsRed)"/>
+
+  <!-- top comic panels -->
+  <path d="M0 0H245L95 475L0 405Z" fill="#FFD21F"/>
+  <path d="M0 0H245L95 475L0 405Z" fill="url(#dotsYellow)" opacity="0.65"/>
+  <path d="M1080 0H830L970 445L1080 380Z" fill="#FFD21F"/>
+  <path d="M1080 0H830L970 445L1080 380Z" fill="url(#dotsYellow)" opacity="0.65"/>
+  <path d="M0 420L190 520L0 700Z" fill="#111114"/>
+  <path d="M1080 390L900 520L1080 710Z" fill="#111114"/>
+
+  <!-- speed lines, deliberately leaving a calm center -->
+  <g stroke="#111114" stroke-linecap="round">
+    <path d="M40 75L365 500" stroke-width="20"/>
+    <path d="M165 0L410 475" stroke-width="14"/>
+    <path d="M310 0L455 445" stroke-width="10"/>
+    <path d="M1040 80L720 500" stroke-width="20"/>
+    <path d="M925 0L680 475" stroke-width="14"/>
+    <path d="M785 0L635 445" stroke-width="10"/>
+  </g>
+  <g stroke="#FFD21F" stroke-linecap="round" opacity="0.92">
+    <path d="M85 210L395 515" stroke-width="8"/>
+    <path d="M995 210L690 515" stroke-width="8"/>
+  </g>
+
+  <!-- white halftone horizon -->
+  <path d="M0 1130
+           C120 1040 215 1080 300 1015
+           C400 940 500 1000 575 945
+           C665 875 765 960 845 930
+           C930 895 1010 945 1080 900
+           L1080 1395L0 1395Z"
+        fill="#FFFDF4"/>
+  <g fill="#111114" opacity="0.16">
+    <circle cx="110" cy="1085" r="8"/><circle cx="145" cy="1065" r="6"/>
+    <circle cx="205" cy="1080" r="7"/><circle cx="280" cy="1035" r="6"/>
+    <circle cx="720" cy="970" r="7"/><circle cx="795" cy="950" r="6"/>
+    <circle cx="930" cy="955" r="8"/><circle cx="1000" cy="930" r="6"/>
+  </g>
+
+  <!-- simplified monochrome city silhouette -->
+  <g fill="#111114">
+    <rect x="0" y="1190" width="135" height="210"/>
+    <rect x="35" y="1130" width="60" height="270"/>
+    <polygon points="35,1130 65,1060 95,1130"/>
+    <rect x="130" y="1245" width="120" height="155"/>
+    <rect x="245" y="1170" width="70" height="230"/>
+    <polygon points="245,1170 280,1110 315,1170"/>
+    <rect x="315" y="1275" width="110" height="125"/>
+    <rect x="430" y="1225" width="90" height="175"/>
+    <rect x="535" y="1250" width="75" height="150"/>
+    <rect x="620" y="1195" width="95" height="205"/>
+    <polygon points="620,1195 667,1140 715,1195"/>
+    <rect x="715" y="1280" width="105" height="120"/>
+    <rect x="820" y="1235" width="75" height="165"/>
+    <rect x="895" y="1175" width="85" height="225"/>
+    <polygon points="895,1175 937,1115 980,1175"/>
+    <rect x="980" y="1260" width="100" height="140"/>
+  </g>
+
+  <!-- clock tower accent -->
+  <g fill="#111114">
+    <rect x="92" y="1035" width="74" height="365"/>
+    <polygon points="82,1035 129,955 176,1035"/>
+    <rect x="108" y="975" width="42" height="38"/>
+  </g>
+  <circle cx="129" cy="1105" r="25" fill="#FFFDF4" stroke="#111114" stroke-width="8"/>
+  <path d="M129 1105L129 1089M129 1105L143 1114" stroke="#111114" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- lower perspective -->
+  <path d="M0 1400L430 1920H0Z" fill="#111114"/>
+  <path d="M1080 1400L650 1920H1080Z" fill="#111114"/>
+  <path d="M145 1400L485 1920H385L75 1400Z" fill="#FFD21F"/>
+  <path d="M935 1400L595 1920H695L1005 1400Z" fill="#FFD21F"/>
+  <path d="M290 1400L505 1920H455L245 1400Z" fill="#FFFDF4"/>
+  <path d="M790 1400L575 1920H625L835 1400Z" fill="#FFFDF4"/>
+
+  <!-- bottom halftone accents -->
+  <path d="M0 1600L360 1920H0Z" fill="url(#dotsRed)" opacity="0.65"/>
+  <path d="M1080 1600L720 1920H1080Z" fill="url(#dotsRed)" opacity="0.65"/>
+</svg>
