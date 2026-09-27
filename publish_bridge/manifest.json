@@ -1,0 +1,32 @@
+{
+  "archive_sha256": "d8af4c5e7cccd90d1a25c5203d3cdff91c94f98b2a8e95bd526cc593f1272d9c",
+  "archive_bytes": 13875309,
+  "chunk_count": 27,
+  "changed_files": [
+    ".last_build_id",
+    "assets/AssetManifest.bin",
+    "assets/AssetManifest.bin.json",
+    "assets/FontManifest.json",
+    "assets/NOTICES",
+    "assets/assets/fonts/DotGothic16-Regular.ttf",
+    "assets/assets/fonts/HachiMaruPop-Regular.ttf",
+    "assets/assets/fonts/RampartOne-Regular.ttf",
+    "assets/assets/fonts/ReggaeOne-Regular.ttf",
+    "assets/assets/fonts/YujiSyuku-Regular.ttf",
+    "assets/assets/images/steampunk_level_back.webp",
+    "assets/assets/images/steampunk_level_front.webp",
+    "assets/assets/images/steampunk_quiz_answered.webp",
+    "assets/assets/images/steampunk_quiz_unanswered.webp",
+    "assets/assets/images/steampunk_result.webp",
+    "assets/assets/images/steampunk_title.webp",
+    "assets/assets/images/steampunk_world_map.webp",
+    "assets/assets/images/themes/comic_action/surface.svg",
+    "assets/assets/images/themes/comic_action/title.svg",
+    "assets/assets/images/themes/steampunk/manifest.json",
+    "assets/fonts/MaterialIcons-Regular.otf",
+    "flutter_bootstrap.js",
+    "index.html",
+    "main.dart.js"
+  ],
+  "source_commit": "0521d5c98393f2e20014c661e873046e4764ee14"
+}
