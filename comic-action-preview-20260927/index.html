@@ -6,30 +6,29 @@
 <title>Alice 漫画・アクション着せ替え</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;background:#0f0f12;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-header{max-width:1080px;margin:auto;padding:24px 18px 10px}
-h1{margin:0 0 8px;font-size:24px}
-p{margin:0;color:#c6c6c8;line-height:1.65}
-.grid{max-width:1080px;margin:auto;padding:16px 18px 48px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
-.card{background:#19191f;border:2px solid #ffd21f;border-radius:16px;padding:12px}
-.card h2{margin:2px 2px 10px;font-size:17px}
-.card img{display:block;width:100%;height:auto;border-radius:10px;background:#111}
-.badge{display:inline-block;background:#e51c23;color:#fff;padding:4px 9px;border-radius:999px;font-size:12px;margin-bottom:10px}
-@media(max-width:720px){.grid{grid-template-columns:1fr}h1{font-size:21px}}
+body{margin:0;background:#0d0d10;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{max-width:1180px;margin:auto;padding:24px 18px 10px}
+h1{margin:0 0 8px;font-size:26px}
+p{margin:0;color:#c7c7c7;line-height:1.6}
+.grid{max-width:1180px;margin:auto;padding:18px 18px 48px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.card{background:#18181d;border:3px solid #ffd21f;border-radius:10px;padding:12px;box-shadow:8px 8px 0 #000}
+.card h2{margin:0 0 10px;font-size:18px;color:#ffd21f}
+.card img{display:block;width:100%;height:auto;background:#fff;border:2px solid #111}
+.note{margin-top:10px;color:#bdbdbd;font-size:13px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}h1{font-size:22px}}
 </style>
 </head>
 <body>
 <header>
-<span class="badge">Flutter実描画</span>
 <h1>Alice 漫画・アクション着せ替え</h1>
-<p>Rampart Oneを英字タイトル、Reggae Oneを日本語・学習UIに使用。黒・赤・黄、ハーフトーン、集中線、太い枠を組み合わせた第1案です。</p>
+<p>Rampart One＋Reggae Oneを軸に、黒・赤・黄、網点、集中線、太枠、コミック調の星演出を組み合わせた第1案です。Flutter実描画。</p>
 </header>
 <main class="grid">
-<section class="card"><h2>タイトル画面</h2><img src="comic_action_title.png" alt="タイトル画面"></section>
-<section class="card"><h2>LEVEL一覧</h2><img src="comic_action_level.png" alt="LEVEL一覧"></section>
-<section class="card"><h2>問題画面</h2><img src="comic_action_quiz.png" alt="問題画面"></section>
-<section class="card"><h2>結果画面</h2><img src="comic_action_result.png" alt="結果画面"></section>
-<section class="card"><h2>ワールドマップ</h2><img src="comic_action_world_map.png" alt="ワールドマップ"></section>
+<section class="card"><h2>1. タイトル</h2><img src="comic_action_title.png" alt="タイトル"></section>
+<section class="card"><h2>2. LEVEL一覧</h2><img src="comic_action_level.png" alt="LEVEL一覧"><div class="note">星リング背面にコミックバーストを追加。</div></section>
+<section class="card"><h2>3. 問題画面</h2><img src="comic_action_quiz.png" alt="問題画面"><div class="note">4択は太枠・低い角丸・強い影。</div></section>
+<section class="card"><h2>4. 結果画面</h2><img src="comic_action_result.png" alt="結果画面"></section>
+<section class="card"><h2>5. ワールドマップ</h2><img src="comic_action_world_map.png" alt="ワールドマップ"></section>
 </main>
 </body>
 </html>
