@@ -1,0 +1,73 @@
+name: Prepare deferred reading filter release
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/deploy-deferred-reading-filter.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download tested build
+        env:
+          ARTIFACT_URL: "https://sdmntprjapaneast.oaiusercontent.com/files/00000000-de20-8209-a74c-8b4ab0d3ec5f/raw?se=2026-10-03T11%3A20%3A46Z&sp=r&sv=2026-02-06&sr=b&scid=e0b3044a-e353-40e2-9804-1cc8ed9c5c0b&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-03T01%3A57%3A54Z&ske=2026-10-04T01%3A57%3A54Z&sks=b&skv=2026-02-06&sig=8oNQZxnXYrFi4jREsjADcHZ1SP9l3J18VoAaTm3UKXI%3D"
+        run: |
+          curl --fail --location --max-time 90 "$ARTIFACT_URL" --output /tmp/alice-filter.zip
+          echo '7e23a3e8953a541d12e8071c1e5b58ddad1c0b3270f8b41710116f8123049f11  /tmp/alice-filter.zip' | sha256sum --check
+          mkdir /tmp/alice-filter
+          unzip -q /tmp/alice-filter.zip -d /tmp/alice-filter
+      - name: Validate and stage tested UI update
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, shutil
+          source = 'e352180bccae839477e9c02159dd0612371ef696'
+          root = Path('/tmp/alice-filter')
+          previous = json.loads(Path('alice-release.json').read_text())
+          assert previous['source_commit'] == '7cfef51d194b4d54c4824f2a5f3cd683671fcfbc'
+          assert (root / 'main.dart.js').is_file()
+          main = (root / 'main.dart.js').read_text()
+          assert 'alice_pronunciation_adoption_progress_v1' in main
+          allowed = {'index.html', 'flutter_bootstrap.js', 'main.dart.js', 'main.dart.js.map', 'flutter_service_worker.js', 'version.json', '.last_build_id'}
+          changed = []
+          for path in sorted(root.rglob('*')):
+              if not path.is_file():
+                  continue
+              name = path.relative_to(root).as_posix()
+              assert not name.startswith('.github/') and not name.startswith('.git/')
+              old = Path(name)
+              if not old.is_file() or old.read_bytes() != path.read_bytes():
+                  assert name in allowed, 'Unexpected build change: ' + name
+                  changed.append(name)
+          assert 'main.dart.js' in changed
+          for name in changed:
+              shutil.copyfile(root / name, name)
+          index = Path('index.html')
+          text = (root / 'index.html').read_text()
+          assert text.count('src="flutter_bootstrap.js"') == 1
+          index.write_text(text.replace('src="flutter_bootstrap.js"', f'src="flutter_bootstrap.js?v={source[:8]}"'))
+          bootstrap = Path('flutter_bootstrap.js')
+          text = (root / 'flutter_bootstrap.js').read_text()
+          assert text.count('"mainJsPath":"main.dart.js"') == 1
+          bootstrap.write_text(text.replace('"mainJsPath":"main.dart.js"', f'"mainJsPath":"main.dart.js?v={source[:8]}"'))
+          previous.update(source_commit=source, fix='deferred-reading-filter', verified_ci_run=37118853422)
+          Path('alice-release.json').write_text(json.dumps(previous, indent=2) + '\n')
+          names = sorted(set(changed) | {'index.html', 'flutter_bootstrap.js', 'alice-release.json'})
+          print(json.dumps({'changed_files': names, 'sha256': {n: hashlib.sha256(Path(n).read_bytes()).hexdigest() for n in names}}, indent=2))
+          PY
+      - name: Preserve release for atomic publication
+        run: |
+          git config user.name 'alice-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- index.html flutter_bootstrap.js main.dart.js alice-release.json
+          for path in main.dart.js.map flutter_service_worker.js version.json .last_build_id; do
+            if test -f "$path"; then git add -f -- "$path"; fi
+          done
+          git commit -m 'Publish deferred reading filter from tested source e352180b'
+          git push origin HEAD:refs/heads/release/deferred-reading-filter-20261003
