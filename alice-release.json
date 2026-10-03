@@ -1,5 +1,5 @@
 {
-  "source_commit": "9840fc0341e6be819f43bd5129dcb7ee3d82bd14",
+  "source_commit": "5eecbce9e1db45a114b2756018983c920d139f93",
   "mode": "study-with-pronunciation",
   "total_words": 6000,
   "pronunciation_count": 6000,
@@ -10,6 +10,6 @@
     "ascendancyism",
     "antisyzygy"
   ],
-  "fix": "all-6000-pronunciation",
-  "verified_ci_run": 37127980574
+  "fix": "centered-quiz-word",
+  "verified_ci_run": 37128894088
 }
