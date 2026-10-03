@@ -1,9 +1,15 @@
 {
-  "source_commit": "e352180bccae839477e9c02159dd0612371ef696",
-  "mode": "pronunciation-adoption",
-  "total_questions": 414,
-  "initial_selected": 20,
-  "remaining_questions": 394,
-  "fix": "deferred-reading-filter",
-  "verified_ci_run": 37118853422
+  "source_commit": "9840fc0341e6be819f43bd5129dcb7ee3d82bd14",
+  "mode": "study-with-pronunciation",
+  "total_words": 6000,
+  "pronunciation_count": 6000,
+  "user_decisions": 414,
+  "user_word_ids": 422,
+  "provisional_readings_allowed": true,
+  "pending_meaning_review": [
+    "ascendancyism",
+    "antisyzygy"
+  ],
+  "fix": "all-6000-pronunciation",
+  "verified_ci_run": 37127980574
 }
