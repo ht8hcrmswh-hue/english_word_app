@@ -1,0 +1,73 @@
+name: Prepare all 6000 pronunciations release
+
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/deploy-all-6000-pronunciation.yml']
+
+permissions:
+  contents: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+      - name: Download tested build
+        env:
+          ARTIFACT_URL: "https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-8c38-8206-b8c8-478165f8ebd5/raw?se=2026-10-03T14%3A06%3A59Z&sp=r&sv=2026-02-06&sr=b&scid=5ff059a2-f2ee-4df5-9e65-e83ee24dc70c&skoid=03727f49-62d3-42ac-8350-1c0e6559d238&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-02T23%3A56%3A31Z&ske=2026-10-03T23%3A56%3A31Z&sks=b&skv=2026-02-06&sig=3RHjkh%2BK%2BeUT9pXI0JogYwNtnvuy7qdU1Vry54TsFHA%3D"
+        run: |
+          curl --fail --location --max-time 90 "$ARTIFACT_URL" --output /tmp/alice-6000.zip
+          echo '0a6c7d6d36aa8ee2c5932cb2c17ccc2c22723026d7d217884c950a84e230dae7  /tmp/alice-6000.zip' | sha256sum --check
+          mkdir /tmp/alice-6000
+          unzip -q /tmp/alice-6000.zip -d /tmp/alice-6000
+      - name: Validate and stage tested UI update
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, shutil
+          source = '9840fc0341e6be819f43bd5129dcb7ee3d82bd14'
+          root = Path('/tmp/alice-6000')
+          previous = json.loads(Path('alice-release.json').read_text())
+          assert previous['source_commit'] == 'e352180bccae839477e9c02159dd0612371ef696'
+          assert (root / 'main.dart.js').is_file()
+          main = (root / 'main.dart.js').read_text()
+          assert 'alice_pronunciation_adoption_progress_v1' in main
+          allowed = {'index.html', 'flutter_bootstrap.js', 'main.dart.js', 'main.dart.js.map', 'flutter_service_worker.js', 'version.json', '.last_build_id'}
+          changed = []
+          for path in sorted(root.rglob('*')):
+              if not path.is_file():
+                  continue
+              name = path.relative_to(root).as_posix()
+              assert not name.startswith('.github/') and not name.startswith('.git/')
+              old = Path(name)
+              if not old.is_file() or old.read_bytes() != path.read_bytes():
+                  assert name in allowed, 'Unexpected build change: ' + name
+                  changed.append(name)
+          assert 'main.dart.js' in changed
+          for name in changed:
+              shutil.copyfile(root / name, name)
+          index = Path('index.html')
+          text = (root / 'index.html').read_text()
+          assert text.count('src="flutter_bootstrap.js"') == 1
+          index.write_text(text.replace('src="flutter_bootstrap.js"', f'src="flutter_bootstrap.js?v={source[:8]}"'))
+          bootstrap = Path('flutter_bootstrap.js')
+          text = (root / 'flutter_bootstrap.js').read_text()
+          assert text.count('"mainJsPath":"main.dart.js"') == 1
+          bootstrap.write_text(text.replace('"mainJsPath":"main.dart.js"', f'"mainJsPath":"main.dart.js?v={source[:8]}"'))
+          previous = dict(source_commit=source, mode='study-with-pronunciation', total_words=6000, pronunciation_count=6000, user_decisions=414, user_word_ids=422, provisional_readings_allowed=True, pending_meaning_review=['ascendancyism', 'antisyzygy'], fix='all-6000-pronunciation', verified_ci_run=37127980574)
+          Path('alice-release.json').write_text(json.dumps(previous, indent=2) + '\n')
+          names = sorted(set(changed) | {'index.html', 'flutter_bootstrap.js', 'alice-release.json'})
+          print(json.dumps({'changed_files': names, 'sha256': {n: hashlib.sha256(Path(n).read_bytes()).hexdigest() for n in names}}, indent=2))
+          PY
+      - name: Preserve release for atomic publication
+        run: |
+          git config user.name 'alice-release-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add -- index.html flutter_bootstrap.js main.dart.js alice-release.json
+          for path in main.dart.js.map flutter_service_worker.js version.json .last_build_id; do
+            if test -f "$path"; then git add -f -- "$path"; fi
+          done
+          git commit -m 'Publish all 6000 pronunciations from tested source 9840fc03'
+          git push origin HEAD:refs/heads/release/all-6000-pronunciation-20261003
